@@ -1,0 +1,30 @@
+{
+    "name": "simpletuner",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "webpack",
+        "deploy": "firebase deploy --only functions",
+        "predeploy": "webpack"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jonas99y/SimpleTuner.git"
+    },
+    "keywords": [
+        "google-assistant"
+    ],
+    "author": "jonas99y",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/jonas99y/SimpleTuner/issues"
+    },
+    "homepage": "https://github.com/jonas99y/SimpleTuner#readme",
+    "dependencies": {
+        "ts-loader": "^2.3.0",
+        "typescript": "^2.4.1",
+        "webpack": "^3.3.0",
+        "webpack-node-externals": "^1.6.0"
+    }
+}
