@@ -1,18 +1,26 @@
-/**
- * Responds to any HTTP request that can provide a "message" field in the body.
- *
- * @param {!Object} req Cloud Function request context.
- * @param {!Object} res Cloud Function response context.
- */
+import * as actionsOnGoogle from 'actions-on-google' 
+const ApiAiApp = actionsOnGoogle.ApiAiApp;
 
-//const ApiAiApp = require('actions-on-google').ApiAiApp;
 
-export const helloWorld = function helloWorld(req:any, res:any) {
-    //const app = new ApiAiApp({request: req, response: res});
-    console.log("new call")
-    console.log(req);
-    console.log("processing...")
+export const requestHandler = function handler(req:any, res:any){
+    const WELCOME_INTENT = 'input.welcome';
+    const PLAYNOTE_INTENT= 'input.playNote';
+    const app = new ApiAiApp({ request: req, response: res });
+    console.log(app.getRawInput());    
+    const actionMap = new Map();
+    actionMap.set(WELCOME_INTENT, helloWorld);
+    actionMap.set(PLAYNOTE_INTENT, playNote);
+    app.handleRequest(actionMap);
+}
 
+
+function playNote(app:any){
+    let contexts = app.getContexts();
+    app.tell("I play note: " + contexts[0]['parameters']['note'] + "!");
+}
+
+
+export const helloWorld = function helloWorld(app:any) {
     var msg = "<speak><audio src='https://storage.googleapis.com/notebot-53768.appspot.com/SampleAudio_0.5mb.mp3' />thing</speak>"
 
     var response = {
@@ -26,8 +34,6 @@ export const helloWorld = function helloWorld(req:any, res:any) {
         "source": "my webhook",
         "displayText": "Am I display"
     }
-
-    console.log(response);
-    res.status(200).send(response);
+    app.tell(response);
 
 };

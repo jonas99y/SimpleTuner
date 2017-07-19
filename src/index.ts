@@ -1,3 +1,3 @@
-import * as testFunction from './testFunction';
+import * as firstFunction from './testFunction';
 
-export const TestFunction = testFunction;
+export const requestHandler = firstFunction.requestHandler;

@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "build": "webpack",
-        "deploy": "firebase deploy --only functions",
+        "deploy": "gcloud beta functions deploy requestHandler --trigger-http --stage-bucket notebot-53768.appspot.com",
         "predeploy": "webpack"
     },
     "repository": {
@@ -22,6 +22,7 @@
     },
     "homepage": "https://github.com/jonas99y/SimpleTuner#readme",
     "dependencies": {
+        "actions-on-google": "^1.2.0",
         "ts-loader": "^2.3.0",
         "typescript": "^2.4.1",
         "webpack": "^3.3.0",
