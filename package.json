@@ -23,6 +23,8 @@
     "homepage": "https://github.com/jonas99y/SimpleTuner#readme",
     "dependencies": {
         "actions-on-google": "^1.2.0",
+        "firebase-admin": "^5.1.0",
+        "request": "^2.81.0",
         "ts-loader": "^2.3.0",
         "typescript": "^2.4.1",
         "webpack": "^3.3.0",

@@ -1,18 +1,62 @@
 import * as actionsOnGoogle from 'actions-on-google'
+import ServiceAccount as admin from 'firebase-admin'
+import * as secret from './secret'
+// import * as cert from "https://storage.cloud.google.com/notebot-53768.appspot.com/capso-789ce-firebase-adminsdk-9l8bo-3c3f55c7f8.json"
+
 const ApiAiApp = actionsOnGoogle.ApiAiApp;
 
 
 export const requestHandler = function handler(req: any, res: any) {
-    const WELCOME_INTENT = 'input.welcome';
-    const PLAYNOTE_INTENT = 'input.playNote';
-    const app = new ApiAiApp({ request: req, response: res });
-    console.log(app.getRawInput());
-    const actionMap = new Map();
-    actionMap.set(WELCOME_INTENT, helloWorld);
-    actionMap.set(PLAYNOTE_INTENT, playNote);
-    app.handleRequest(actionMap);
+    openDb().then(x=>{
+        const WELCOME_INTENT = 'input.welcome';
+        const PLAYNOTE_INTENT = 'input.playNote';
+        const app = new ApiAiApp({ request: req, response: res });
+        console.log(app.getRawInput());
+        const actionMap = new Map();
+        actionMap.set(WELCOME_INTENT, helloWorld);
+        actionMap.set(PLAYNOTE_INTENT, playNote);
+        app.handleRequest(actionMap);
+    })
+
 }
 
+
+function openDb():Promise<any>{
+    const promise: Promise<any> = new Promise((resolve,reject)=>{
+        admin.ServiceAccount
+                admin.initializeApp({
+                    credential: admin.credential.cert(secret.key),
+                    databaseURL: "https://capso-789ce.firebaseio.com"
+                });
+                resolve(admin);
+        
+    });
+   return promise;
+
+}
+
+// function getObjectFormUrl (url:string):Promise<object> {
+//     const promise: Promise<object> = new Promise((resolve,reject)=>{
+//         request.get(url,(x:any,y:any,z:any)=>{
+//             console.log(x,y,z);
+//             resolve(z);
+//         })
+//         // var xhr = new XMLHttpRequest();
+//         // xhr.open('GET', url, true);
+//         // xhr.responseType = 'json';
+//         // xhr.onload = function () {
+//         //     var status = xhr.status;
+//         //     if (status == 200) {
+//         //         resolve(xhr.response)
+//         //     } else {
+//         //         reject("error oder so!")
+//         //     }
+//         // };
+//         // xhr.send();
+//     });
+//     return promise;
+
+// };
 
 function playNote(app: any) {
     let contexts = app.getContexts();
@@ -25,6 +69,8 @@ function playNote(app: any) {
     console.log(response);
     app.tell(response);
 }
+
+
 
 enum Notes {
     C_Note,
