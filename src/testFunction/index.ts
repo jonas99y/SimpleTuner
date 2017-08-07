@@ -4,101 +4,95 @@ import * as secret from './secret'
 // import * as cert from "https://storage.cloud.google.com/notebot-53768.appspot.com/capso-789ce-firebase-adminsdk-9l8bo-3c3f55c7f8.json"
 
 const ApiAiApp = actionsOnGoogle.ApiAiApp;
-
+let dbApp: admin.app.App;
 
 export const requestHandler = function handler(req: any, res: any) {
-    openDb().then(firebaseApp=>{
-        firebaseApp.database().ref().push("test");
-        const WELCOME_INTENT = 'input.welcome';
-        const PLAYNOTE_INTENT = 'input.playNote';
-        const app = new ApiAiApp({ request: req, response: res });
-        console.log(app.getRawInput());
-        const actionMap = new Map();
-        actionMap.set(WELCOME_INTENT, helloWorld);
-        actionMap.set(PLAYNOTE_INTENT, playNote);
+    const WELCOME_INTENT = 'input.welcome';
+    const PLAYNOTE_INTENT = 'input.playNote';
+    const app = new ApiAiApp({ request: req, response: res });
+    console.log(app.getRawInput());
+    const actionMap = new Map();
+    actionMap.set(WELCOME_INTENT, helloWorld);
+    actionMap.set(PLAYNOTE_INTENT, playNote);
+    GetDbApp().then(firebaseApp => {
         app.handleRequest(actionMap);
     })
 
 }
 
 
-function openDb(): Promise<admin.app.App>{
-   
-    const promise: Promise<admin.app.App> = new Promise((resolve,reject)=>{
-                const app=admin.initializeApp({
-                    credential: admin.credential.cert(secret.key),
-                    databaseURL: "https://capso-789ce.firebaseio.com"
-                });
-               
-                resolve(app);
-        
+function GetDbApp(): Promise<admin.app.App> {
+    const promise: Promise<admin.app.App> = new Promise((resolve, reject) => {
+        if (dbApp == undefined)
+            dbApp = admin.initializeApp({
+                credential: admin.credential.cert(secret.key),
+                databaseURL: "https://capso-789ce.firebaseio.com"
+            });
+        resolve(dbApp);
+
     });
-   return promise;
+    return promise;
 
 }
 
-// function getObjectFormUrl (url:string):Promise<object> {
-//     const promise: Promise<object> = new Promise((resolve,reject)=>{
-//         request.get(url,(x:any,y:any,z:any)=>{
-//             console.log(x,y,z);
-//             resolve(z);
-//         })
-//         // var xhr = new XMLHttpRequest();
-//         // xhr.open('GET', url, true);
-//         // xhr.responseType = 'json';
-//         // xhr.onload = function () {
-//         //     var status = xhr.status;
-//         //     if (status == 200) {
-//         //         resolve(xhr.response)
-//         //     } else {
-//         //         reject("error oder so!")
-//         //     }
-//         // };
-//         // xhr.send();
-//     });
-//     return promise;
-
-// };
 
 function playNote(app: any) {
     let contexts = app.getContexts();
-    let noteString:string =contexts[0]['parameters']['note'];
-    let note:Notes = GetNoteFromString(noteString);
-    let noteUrl:string = GetUrlOfNote(note);
-    let ssmlMessage = "<speak>OK!<audio src='"+noteUrl+"' />I just played a "+noteString+"</speak>";
+    let noteString: string = contexts[0]['parameters']['note'];
+    console.log(app.getUser().userId);
+    let note: Notes = GetNoteFromString(noteString);
+    let noteUrl: string = GetUrlOfNote(note);
+    let ssmlMessage = "<speak>OK!<audio src='" + noteUrl + "' />I just played a " + noteString + "</speak>";
     let displayText = noteString;
     let response = GetSSMLResponse(ssmlMessage, displayText, true);
     console.log(response);
-    app.tell(response);
+    addNoteToDb(note).then(x => {
+        app.tell(response);
+    });
 }
 
+function addNoteToDb(note: Notes): Promise<void> {
+    const promise: Promise<void> = new Promise((resolve, reject) => {
+        GetDbApp().then(dbApp => {
+
+            dbApp.database().ref("/notes/" + note).transaction(x => {
+                return x + 1;
+            }).then(x => {
+                resolve();
+            });
+        });
+    });
+    return promise;
+}
 
 
 enum Notes {
-    C_Note,
-    D_Note,
-    F_Note,
-    G_Note,
-    A_Note,
-    B_Note
+    C_Note = "C",
+    D_Note = "D",
+    F_Note = "F",
+    G_Note = "G",
+    A_Note = "A",
+    B_Note = "B"
 }
 
-function GetNoteFromString(noteString:string):Notes{
-   
-    let note:Notes = Notes.A_Note;
-    switch(noteString.toLowerCase()){
-        case "c":
+function GetNoteFromString(noteString: string): Notes {
+    let note: Notes = Notes.A_Note;
+    switch (noteString.toUpperCase()) {
+        case "C":
             note = Notes.C_Note;
-        break;
+            break;
+        case "D":
+            note = Notes.D_Note;
+            break;
         default:
-        throw "Unable to parse note ("+noteString+") !";
+            throw "Unable to parse note (" + noteString + ") !";
     }
-    
+
     return note;
 }
 
 
-function GetUrlOfNote(note: Notes):string {
+function GetUrlOfNote(note: Notes): string {
     const url: string = "https://storage.googleapis.com/notebot-53768.appspot.com/sounds/"
     let part: string;
     switch (note) {
@@ -111,6 +105,9 @@ function GetUrlOfNote(note: Notes):string {
         case (Notes.C_Note):
             part = "68440__pinkyfinger__piano-c.wav"
             break;
+        case (Notes.D_Note):
+            part = "68442__pinkyfinger__piano-d.wav"
+            break;
         default:
             throw "Note not supported (" + note + ")";
 
@@ -118,7 +115,7 @@ function GetUrlOfNote(note: Notes):string {
     return url + part;
 }
 
-function GetSSMLResponse(ssmlMessage:string, displayText:string, expectUserResponse:boolean =false):object{
+function GetSSMLResponse(ssmlMessage: string, displayText: string, expectUserResponse: boolean = false): object {
     var response = {
         "speech": ssmlMessage,
         data: {
