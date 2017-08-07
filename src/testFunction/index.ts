@@ -61,9 +61,7 @@ function openDb(): Promise<admin.app.App>{
 // };
 
 function playNote(app: any) {
-    console.log(app);
     let contexts = app.getContexts();
-    console.log(contexts);
     let noteString:string =contexts[0]['parameters']['note'];
     let note:Notes = GetNoteFromString(noteString);
     let noteUrl:string = GetUrlOfNote(note);
@@ -86,12 +84,11 @@ enum Notes {
 }
 
 function GetNoteFromString(noteString:string):Notes{
-    console.log(noteString);
+   
     let note:Notes = Notes.A_Note;
     switch(noteString.toLowerCase()){
         case "c":
             note = Notes.C_Note;
-            console.log("do you even c?")
         break;
         default:
         throw "Unable to parse note ("+noteString+") !";
