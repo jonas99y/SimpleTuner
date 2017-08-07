@@ -1,5 +1,5 @@
-import * as actionsOnGoogle from 'actions-on-google'
-import ServiceAccount as admin from 'firebase-admin'
+import * as actionsOnGoogle from 'actions-on-google';
+import * as admin from 'firebase-admin';
 import * as secret from './secret'
 // import * as cert from "https://storage.cloud.google.com/notebot-53768.appspot.com/capso-789ce-firebase-adminsdk-9l8bo-3c3f55c7f8.json"
 
@@ -7,7 +7,8 @@ const ApiAiApp = actionsOnGoogle.ApiAiApp;
 
 
 export const requestHandler = function handler(req: any, res: any) {
-    openDb().then(x=>{
+    openDb().then(firebaseApp=>{
+        firebaseApp.database().ref().push("test");
         const WELCOME_INTENT = 'input.welcome';
         const PLAYNOTE_INTENT = 'input.playNote';
         const app = new ApiAiApp({ request: req, response: res });
@@ -21,14 +22,15 @@ export const requestHandler = function handler(req: any, res: any) {
 }
 
 
-function openDb():Promise<any>{
-    const promise: Promise<any> = new Promise((resolve,reject)=>{
-        admin.ServiceAccount
-                admin.initializeApp({
+function openDb(): Promise<admin.app.App>{
+   
+    const promise: Promise<admin.app.App> = new Promise((resolve,reject)=>{
+                const app=admin.initializeApp({
                     credential: admin.credential.cert(secret.key),
                     databaseURL: "https://capso-789ce.firebaseio.com"
                 });
-                resolve(admin);
+               
+                resolve(app);
         
     });
    return promise;
@@ -59,7 +61,9 @@ function openDb():Promise<any>{
 // };
 
 function playNote(app: any) {
+    console.log(app);
     let contexts = app.getContexts();
+    console.log(contexts);
     let noteString:string =contexts[0]['parameters']['note'];
     let note:Notes = GetNoteFromString(noteString);
     let noteUrl:string = GetUrlOfNote(note);
